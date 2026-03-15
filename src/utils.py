@@ -1,7 +1,16 @@
 
 import datetime
+import re
 import typing
 
+def to_pascal_case(snake_str: str) -> str:
+    """
+    Преобразует snake_case в PascalCase
+    Пример: "information_type_string" -> "InformationTypeString"
+    """
+    # Разбиваем по underscore и делаем каждое слово с заглавной
+    words = snake_str.split('_')
+    return ''.join(word.capitalize() for word in words)
 
 def parse_iso8601_utc(value: typing.Any, field_name: str, model_class: type) -> typing.Any:
     """
@@ -41,7 +50,6 @@ def parse_iso8601_utc(value: typing.Any, field_name: str, model_class: type) -> 
             ) from e
     
     return value
-
 
 def serialize_to_iso8601_utc(dt: datetime.datetime) -> str:
     """
