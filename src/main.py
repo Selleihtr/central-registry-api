@@ -5,10 +5,27 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.router import router
 from src import database
-
+from src import placeholder
 
 def startup():
     database.create_tables()
+    
+    # Создаем тестовую транзакцию
+    db = database.SessionLocal()
+    try:
+        signed_data = placeholder.create_first_transaction()
+        placeholder.create_transaction_in_db(
+            db=db,
+            signed_api_data=signed_data,
+            transaction_type=9,
+            meta_data="Тестовая транзакция при запуске"
+        )
+        db.commit()
+    except Exception as e:
+        print(f"Ошибка: {e}")
+        db.rollback()
+    finally:
+        db.close()
 
 
 def shutdown():
