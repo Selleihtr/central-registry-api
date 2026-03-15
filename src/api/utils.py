@@ -1,15 +1,88 @@
 import hashlib
 import json
-import enum
 import base64
+import typing
 
-from typing import Any, Dict, Set, Union
-from datetime import datetime
-from decimal import Decimal
-
+from src.api.schemas.signed_api_data import SignedApiData
 
 
-def encode_base64(data: Union[str, bytes, dict, list, Any]) -> str:
+
+def unpack_envelope(
+    envelope: SignedApiData,
+    verify_sign: bool = True
+) -> typing.Dict[str, typing.Any]:
+    """
+    Распаковывает конверт SignedApiData и возвращает данные и отправителя.
+    
+    Args:
+        envelope: Объект SignedApiData с полями data, sign, signer_cert
+        verify_sign: Проверять ли подпись
+    
+    Returns:
+        Словарь с полями:
+        - data: распакованные данные
+        - signer: отправитель
+        - sign_valid: результат проверки подписи (если verify_sign=True)
+    """
+    # Декодируем Data
+    data_str = decode_base64(envelope.data, as_string=True)
+    try:
+        data = json.loads(data_str)
+    except json.JSONDecodeError:
+        data = data_str
+    
+    # Декодируем отправителя
+    signer = decode_base64(envelope.signer_cert, as_string=True)
+    
+    result = {
+        "data": data,
+        "signer": signer
+    }
+    
+    # Проверяем подпись
+    if verify_sign:
+        expected_sign = encode_base64(
+            calculate_hash(envelope.data)
+        )
+        if envelope.sign != expected_sign:
+            raise ValueError(f"Invalid signature")
+        result["sign_valid"] = True
+    return result["data"]
+
+
+def pack_envelope(
+    data: typing.Any,
+    signer_name: str = "SYSTEM_B"
+) -> SignedApiData:
+    """
+    Упаковывает данные в конверт SignedApiData.
+    
+    Args:
+        data: Данные для упаковки
+        signer_name: Имя отправителя
+    
+    Returns:
+        Объект SignedApiData с полями data, sign, signer_cert
+    """
+    data_base64 = encode_base64(data)
+    cert_base64 = encode_base64(signer_name)
+    sign_base64 = encode_base64(calculate_hash(data_base64))
+    
+    return SignedApiData(
+        data=data_base64,
+        sign=sign_base64,
+        signer_cert=cert_base64
+    )
+
+def decode_base64_json(data: str) -> dict:
+    """
+    Декодирует Base64 строку и парсит JSON.
+    Удобно для цепочки: base64 → строка → JSON
+    """
+    str_data = base64.b64decode(data).decode('utf-8')
+    return json.loads(str_data)
+
+def encode_base64(data: typing.Union[str, bytes, dict, list, typing.Any]) -> str:
     """
     Кодирует данные в Base64
     
@@ -41,7 +114,7 @@ def encode_base64(data: Union[str, bytes, dict, list, Any]) -> str:
     return base64.b64encode(data).decode('utf-8')
 
 
-def decode_base64(data: str, as_string: bool = True) -> Union[str, bytes]:
+def decode_base64(data: str, as_string: bool = True) -> typing.Union[str, bytes]:
     """
     Декодирует Base64 строку
     
@@ -58,7 +131,7 @@ def decode_base64(data: str, as_string: bool = True) -> Union[str, bytes]:
     return bytes_data
 
 
-def to_json(data: Dict, sort_keys: bool = False) -> str:
+def to_json(data: typing.Dict, sort_keys: bool = False) -> str:
     """
     Сериализует в JSON с сохранением порядка полей
     """
@@ -69,7 +142,7 @@ def to_json(data: Dict, sort_keys: bool = False) -> str:
         sort_keys=sort_keys      # False для сохранения порядка
     )
 
-def calculate_hash(obj: Union[Dict, str, Any]) -> str:
+def calculate_hash(obj: typing.Union[typing.Dict, str, typing.Any]) -> str:
     """
     Вычисляет SHA-256 хеш для объекта или строки
     
