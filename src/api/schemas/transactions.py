@@ -5,7 +5,7 @@ from src.schemas import BaseScheme as BaseModel
 
 
 
-class Transaction(BaseModel):   
+class TransactionScheme(BaseModel):   
     """ Схема для единицы хранения в реестре. 
     
     Все информационные сообщения упаковываются в транзакции.
@@ -25,5 +25,5 @@ class TransactionsData(BaseModel):
     """
     Ответ со списком транзакций
     """
-    transactions: list[Transaction]
+    transactions: list[TransactionScheme]
     count: int

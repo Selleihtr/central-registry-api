@@ -21,8 +21,8 @@ class Transaction(Base):
         primary_key=True,
         default=lambda: uuid.uuid4().hex,     #hex без "-"
     )                                
-    transaction_type: Mapped[constants.TransactionTypeEnum] = mapped_column(
-        sqlalchemy.Enum(constants.TransactionTypeEnum),
+    transaction_type: Mapped[constants.TransactionType] = mapped_column(
+        sqlalchemy.Enum(constants.TransactionType),
         nullable=False,
     )
     data: Mapped[str] = mapped_column(       #base64 string
