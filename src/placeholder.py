@@ -94,26 +94,24 @@ def create_seach_request():
 
 def create_first_transaction():
     message_data = utils.encode_base64(info_message_placeholder)
-    message_placeholder.setdefault("Data", message_data)
+    message_placeholder["Data"]= message_data
 
     transaction_data = utils.encode_base64(message_placeholder)
-
-    transaction_placeholder.setdefault("Sign","")
-    transaction_placeholder.setdefault("Hash","")
-    transaction_placeholder.setdefault("Data",transaction_data)
     signer_cert = utils.encode_base64("SYSTEM_A")
-    transaction_placeholder.setdefault("SignerCert", signer_cert)
+    transaction_placeholder["SignerCert"]= signer_cert
+    transaction_placeholder["Sign"]=""
+    transaction_placeholder["Hash"]=""
+    transaction_placeholder["Data"]=transaction_data
 
     transaction_hash=utils.calculate_hash(transaction_placeholder)
 
-    transaction_placeholder.setdefault("Hash",transaction_hash)
-    transaction_placeholder.setdefault("Sign",utils.create_sign_from_hash(transaction_hash))  
+    transaction_placeholder["Hash"]=transaction_hash
+    transaction_placeholder["Sign"]=utils.create_sign_from_hash(transaction_hash)  
 
     signed_api_data = dict()
     signed_api_data.setdefault("Data", utils.encode_base64(transaction_placeholder))
     signed_api_data.setdefault("SignerCert", utils.encode_base64("SYSTEM_A"))
     signed_api_data.setdefault("Sign", utils.encode_base64(utils.calculate_hash(signed_api_data["Data"])))
-
     return signed_api_data
 
 def create_transaction_in_db(
@@ -127,19 +125,18 @@ def create_transaction_in_db(
     
     data_b64 = signed_api_data["Data"]
     sign_b64 = signed_api_data["Sign"]
-    cert_b64 = signed_api_data["SignerCert"]
-    
-    # Распаковываем Data чтобы получить время
+    cert_b64 = signed_api_data["SignerCert"] 
+
     data_str = utils.decode_base64(data_b64, as_string=True)
     data_dict = json.loads(data_str)
     
-    # Валидируем через Pydantic (автоматически распарсит дату!)
     tx_data = TransactionScheme(**data_dict)
+    message_data = data_dict["Data"]
     
     db_transaction = models.Transaction(
         guid=uuid.uuid4().hex,
         transaction_type=transaction_type,
-        data=data_b64,
+        data=message_data,
         hash=utils.calculate_hash(data_b64),
         sign=sign_b64,
         signer_cert=cert_b64,

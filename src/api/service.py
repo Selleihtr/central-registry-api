@@ -21,15 +21,13 @@ def outgoing_service(envelope, db):
     filtered = [] 
     for tx in transactions:  # фильтруем по SYSTEM_A 
         try:
-            tx_data = utils.decode_base64_json(tx.data)
-            message_b64 = tx_data.get("Data")
-            
-            if message_b64:
-                message = utils.decode_base64_json(message_b64)
-                
-                if message.get("ReceiverBranch") == "SYSTEM_A":
-                    tx_schema = TransactionScheme.model_validate(tx)
-                    filtered.append(tx_schema)
+            wrap_message = utils.decode_base64_json(tx.data)
+            wrap_message = WrapMessage(**wrap_message)
+            # print(wrap_message)
+            if wrap_message.receiver_branch == "SYSTEM_A":
+                tx_schema = TransactionScheme.model_validate(tx)
+                filtered.append(tx_schema)
+                    
         except Exception as e:
             print(f"Ошибка при обработке транзакции {getattr(tx, 'guid', 'unknown')}: {e}")
             continue
@@ -37,7 +35,6 @@ def outgoing_service(envelope, db):
     offset = search_params.offset
     limit = search_params.limit
     _transactions = filtered[offset:offset + limit]
-
     transactions_data = TransactionsData(
         transactions=_transactions,
         count=len(filtered)  
