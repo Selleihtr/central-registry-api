@@ -32,13 +32,12 @@ class Transaction(Base):
     hash: Mapped[str] = mapped_column(       
         sqlalchemy.String(64),               #sha-256 ---> 64
         nullable=False,
-        unique=True,
     )
     sign: Mapped[str] = mapped_column(       #base64 string
         sqlalchemy.Text,   
         nullable=False,
     )
-    sign_cert: Mapped[str] = mapped_column(  #base64 string
+    signer_cert: Mapped[str] = mapped_column(  #base64 string
         sqlalchemy.Text,   
         nullable=False,
     )

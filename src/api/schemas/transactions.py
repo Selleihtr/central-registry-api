@@ -10,11 +10,11 @@ class TransactionScheme(BaseModel):
     
     Все информационные сообщения упаковываются в транзакции.
     """          
-    transaction_type: constants.TransactionTypeEnum
+    transaction_type: constants.TransactionType
     data: str #base64 string
     hash: str #sha-256 ---> 64
     sign: str #base64 string
-    sign_cert: str #base64 string
+    signer_cert: str #base64 string
     transaction_time: datetime.datetime
     meta_data: str | None
     transaction_in: str | None
