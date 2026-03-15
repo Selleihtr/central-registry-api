@@ -2,11 +2,10 @@ import datetime
 import typing
 import uuid
 import sqlalchemy 
-import api.constants as constants
 
+from src.api import constants
+from src.database import Base
 from sqlalchemy.orm import Mapped, mapped_column
-
-from database import Base
 
 
 class Transaction(Base):

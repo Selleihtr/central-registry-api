@@ -2,9 +2,9 @@ import uvicorn
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import database
-from api.router import router
 
+from src.api.router import router
+from src import database
 
 
 def startup():

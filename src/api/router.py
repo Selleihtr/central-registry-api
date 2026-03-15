@@ -1,8 +1,8 @@
 import fastapi
 import sqlalchemy
+from src.database import get_db
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from database import get_db
 
 
 
