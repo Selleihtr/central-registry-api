@@ -16,28 +16,28 @@ HTTP_DESCRIPTIONS = {
     500: "Внутренняя ошибка сервера",
 }
 
-class InfoMessageType(enum.Enum):
+class InfoMessageType(enum.IntEnum):
     GUARANTEE_ISSUE = 201
     GUARANTEE_ACCEPT = 202
     GUARANTEE_REJECT = 203
     PAYMENT_RECEIPT = 215
 
-class TransactionType(enum.Enum):
+class TransactionType(enum.IntEnum):
     INFO_MESSAGE = 9      # - c информационным сообщением 
     WITH_GUARANTEE = 18   # - c гарантией
 
 
-class CurrencyCodeEnum(enum.Enum):
+class CurrencyCodeEnum(enum.StrEnum):
     BYN="BYN"
     USD="USD"
     EUR="EUR"
 
-class ObligationType(enum.Enum):
+class ObligationType(enum.IntEnum):
     TYPE_1 = 1
     TYPE_2 = 2 
     TYPE_3 = 3
     TYPE_4 = 4
 
-class RevokationType(enum.Enum):
+class RevokationType(enum.StrEnum):
     REVOCABLE = "Отзывная"     
     IRREVOCABLE = "Безотзывная" 
