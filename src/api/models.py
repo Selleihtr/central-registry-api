@@ -1,17 +1,12 @@
 import datetime
-import enum
 import typing
 import uuid
 import sqlalchemy 
+import api.constants as constants
 
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
-
-
-class TransactionTypeEnum(enum.Enum):
-    INFO_MESSAGE = 9      # - c информационным сообщением 
-    WITH_GUARANTEE = 18   # - c гарантией
 
 
 class Transaction(Base):
@@ -25,10 +20,10 @@ class Transaction(Base):
     guid: Mapped[str] = mapped_column(      
         sqlalchemy.String(32),              
         primary_key=True,
-        default=lambda: uuid.uuid4().hex,    #hex без "-"
+        default=lambda: uuid.uuid4().hex,     #hex без "-"
     )                                
-    transaction_type: Mapped[TransactionTypeEnum] = mapped_column(
-        sqlalchemy.Enum(TransactionTypeEnum),
+    transaction_type: Mapped[constants.TransactionTypeEnum] = mapped_column(
+        sqlalchemy.Enum(constants.TransactionTypeEnum),
         nullable=False,
     )
     data: Mapped[str] = mapped_column(       #base64 string
