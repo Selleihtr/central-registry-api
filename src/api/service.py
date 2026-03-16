@@ -11,9 +11,10 @@ from src import utils as ut
 
 
 def incoming_service(envelope, db):
-    upnacked_data = utils.unpack_envelope(envelope)
-    if not upnacked_data:
-        raise exceptions.BadRequestException("Empty envelope data")
+    try:
+        upnacked_data = utils.unpack_envelope(envelope)
+    except Exception:
+        raise exceptions.BadRequestException()
     
     transactions_data = TransactionsData(**upnacked_data)
     transactions = transactions_data.transactions
@@ -100,11 +101,12 @@ def incoming_service(envelope, db):
 
 
 def outgoing_service(envelope, db):
-    upnacked_data = utils.unpack_envelope(envelope)
-    if not upnacked_data:
-        raise exceptions.BadRequestException("Empty envelope data")
+    try:
+        upnacked_data = utils.unpack_envelope(envelope)
+        search_params = SearchRequest(**upnacked_data)
+    except Exception:
+        raise exceptions.BadRequestException()
     
-    search_params = SearchRequest(**upnacked_data)
     if not search_params.start_date or not search_params.end_date:
         raise exceptions.BadRequestException("Start date and end date are required")
     

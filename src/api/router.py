@@ -30,13 +30,21 @@ def get_health(db: Session = fastapi.Depends(get_db)):
         )
 
 
-@router.post("/outgoing")
+@router.post(
+    "/outgoing", 
+    response_model=SignedApiData,
+)
 def get_outgoing_messages(
     envelope: SignedApiData,
-    db: Session = fastapi.Depends(get_db)
+    db: Session = fastapi.Depends(get_db),
 ):
     """
     Получение входящих сообщений
+
+    - **envelope**: объект типа `SignedApiData`, содержащий:
+        - `Data` (str): base64-закодированные данные
+        - `Sign` (str): подпись
+        - `SignerCert` (str): сертификат подписанта
 
     Возвращает список транзакций с сообщениями, адресованными Системе А, за указанный период.
 
@@ -46,7 +54,7 @@ def get_outgoing_messages(
         return JSONResponse(content=result, status_code=200)
     except exceptions.APIException as e:
         return JSONResponse(
-            content={"error": e.message},
+            content={e.status_code: e.message},
             status_code=e.status_code
         )
     except Exception:
@@ -56,16 +64,22 @@ def get_outgoing_messages(
         )
   
 
-@router.post("/incoming")
+@router.post(
+    "/incoming",
+    response_model=SignedApiData,
+)
 def get_incoming_messages(
     envelope: SignedApiData,
-    db: Session = fastapi.Depends(get_db)
+    db: Session = fastapi.Depends(get_db),
 ):
     """
     Отправляет новые сообщения от Системы А в Систему Б.
 
-    Запрос: конверт SignedApiData, где в поле Data находится TransactionsData с
-    массивом транзакций, которые сохраняются.
+    - **envelope**: объект типа `SignedApiData`, содержащий:
+        - `Data` (str): base64-закодированные данные
+        - `Sign` (str): подпись
+        - `SignerCert` (str): сертификат подписанта
+
 
     Тело ответа: конверт SignedApiData, где в поле Data находится TransactionsData с
     массивом транзакций-квитков.
@@ -75,19 +89,12 @@ def get_incoming_messages(
         return JSONResponse(content=result, status_code=200)
     except exceptions.APIException as e:
         return JSONResponse(
-            content={"error": e.message},
+            content={e.status_code: e.message},
             status_code=e.status_code
         )
     except Exception:
         return JSONResponse(
-            content={"error": constants.HTTP_DESCRIPTIONS[500]},
+            content={500: constants.HTTP_DESCRIPTIONS[500]},
             status_code=500
         )
     
-
-@router.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"])
-async def catch_all(path: str):
-    return JSONResponse(
-        content=constants.HTTP_DESCRIPTIONS[404],
-        status_code=404
-    )

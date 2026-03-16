@@ -1,8 +1,10 @@
 import uvicorn
 
-from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.api import constants
 from src.api.router import router
 from src import database
 from src import placeholder
@@ -47,6 +49,18 @@ app.add_middleware(
 
 app.include_router(router)
 
+@app.exception_handler(404)
+def not_found_handler(request: Request, exc):
+    if request.url.path.startswith(("/docs", "/openapi")):
+        return JSONResponse(
+            content={"error": "Not found"},
+            status_code=404
+        )
+    
+    return JSONResponse(
+        content={"error": constants.HTTP_DESCRIPTIONS[404]},
+        status_code=404
+    )
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
