@@ -41,10 +41,12 @@ def unpack_envelope(
     
     # Проверяем подпись
     if verify_sign:
-        expected_sign = encode_base64(
-            calculate_hash(envelope.data)
-        )
+        # expected_sign = encode_base64(
+            # calculate_hash(envelope.data)
+        expected_sign = create_sign_from_hash(calculate_hash(envelope.data))
+        # )
         if envelope.sign != expected_sign:
+            print(envelope.sign,expected_sign, sep='\n\n')
             raise ValueError(f"Invalid signature")
         result["sign_valid"] = True
     return result["data"]
@@ -66,7 +68,8 @@ def pack_envelope(
     """
     data_base64 = encode_base64(data)
     cert_base64 = encode_base64(signer_name)
-    sign_base64 = encode_base64(calculate_hash(data_base64))
+    # sign_base64 = encode_base64(calculate_hash(data_base64))
+    sign_base64 = create_sign_from_hash(calculate_hash(data_base64))
     
     return SignedApiData(
         data=data_base64,
@@ -155,9 +158,7 @@ def calculate_hash(obj: typing.Union[typing.Dict, str, typing.Any]) -> str:
     Returns:
         HEX-строка в верхнем регистре (64 символа)
     """
-    # 1. Подготавливаем байты для хеширования
     if isinstance(obj, dict):
-        # Словарь: копируем и сериализуем в JSON
         data_for_sign = obj.copy()
         json_str = json.dumps(
             data_for_sign,
@@ -168,17 +169,12 @@ def calculate_hash(obj: typing.Union[typing.Dict, str, typing.Any]) -> str:
         bytes_data = json_str.encode('utf-8')
     
     elif isinstance(obj, str):
-        # Строка: просто кодируем в UTF-8
         bytes_data = obj.encode('utf-8')
-    
+
     else:
-        # Другие типы: приводим к строке
         bytes_data = str(obj).encode('utf-8')
-    
-    # 2. Вычисляем SHA-256
+
     sha256 = hashlib.sha256(bytes_data)
-    
-    # 3. Возвращаем HEX в верхнем регистре
     return sha256.hexdigest().upper()
 
 
@@ -198,3 +194,22 @@ def create_sign_from_hash(hash_hex: str) -> str:
     hash_bytes = bytes.fromhex(hash_hex)
     sign_base64 = base64.b64encode(hash_bytes).decode('utf-8')
     return sign_base64
+
+
+def decode_sign_to_hash(sign_b64: str) -> str:
+    """
+    Декодирует поле Sign (Base64) обратно в HEX-строку хеша.
+    
+    Args:
+        sign_b64: Base64 строка из поля Sign конверта
+    
+    Returns:
+        HEX-строка хеша в верхнем регистре (64 символа)
+    
+    Пример:
+        sign_b64 = "NkE0NUIwOERGNTVCMjQ1MzZBRjFCMjU5RDJENkQzMjZCMjRBMkE0NzhDNDY4MkFCODAzQjM2QTk3RUYxOTM2Mw=="
+        hash_hex = decode_sign_to_hash(sign_b64)  # "6A45B08DF55B24536AF1B259D2D6D326B24A2A478C4682AB803B36A97EF19363"
+    """
+    hash_bytes = base64.b64decode(sign_b64)
+    hash_hex = hash_bytes.hex().upper()
+    return hash_hex

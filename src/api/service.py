@@ -7,6 +7,10 @@ from src.api.models import Transaction
 from src.api import utils
 
 
+
+
+
+
 def outgoing_service(envelope, db):
     upnacked_data = utils.unpack_envelope(envelope)
     search_params = SearchRequest(**upnacked_data)
@@ -46,5 +50,6 @@ def outgoing_service(envelope, db):
     response_envelope = utils.pack_envelope(
         data=data_dict,
         signer_name="SYSTEM_A"
-    ).model_dump()
+    ).model_dump(by_alias=True)
     return response_envelope
+

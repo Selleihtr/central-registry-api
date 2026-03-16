@@ -55,8 +55,20 @@ def get_outgoing_messages(
 
 
 @router.post("/incoming")
-def get_ingoing_messages():
+def get_incoming_messages(
+    envelope: SignedApiData,
+    db: Session = fastapi.Depends(get_db)
+):
+    """
+    Отправляет новые сообщения от Системы А в Систему Б.
+
+    Запрос: конверт SignedApiData, где в поле Data находится TransactionsData с
+    массивом транзакций, которые сохраняются.
+
+    Тело ответа: конверт SignedApiData, где в поле Data находится TransactionsData с
+    массивом транзакций-квитков.
+    """
+    return 
     
-   pass
 
 

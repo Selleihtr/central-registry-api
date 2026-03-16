@@ -88,7 +88,7 @@ def create_seach_request():
     signed_api_data = dict()
     signed_api_data.setdefault("Data", utils.encode_base64(search_request_place_holder))
     signed_api_data.setdefault("SignerCert", utils.encode_base64("SYSTEM_A"))
-    signed_api_data.setdefault("Sign", utils.encode_base64(utils.calculate_hash(signed_api_data["Data"])))
+    signed_api_data.setdefault("Sign", utils.create_sign_from_hash(utils.calculate_hash(signed_api_data["Data"])))
 
     return signed_api_data
 
@@ -111,7 +111,7 @@ def create_first_transaction():
     signed_api_data = dict()
     signed_api_data.setdefault("Data", utils.encode_base64(transaction_placeholder))
     signed_api_data.setdefault("SignerCert", utils.encode_base64("SYSTEM_A"))
-    signed_api_data.setdefault("Sign", utils.encode_base64(utils.calculate_hash(signed_api_data["Data"])))
+    signed_api_data.setdefault("Sign", utils.create_sign_from_hash(utils.calculate_hash(signed_api_data["Data"])))
     return signed_api_data
 
 def create_transaction_in_db(
