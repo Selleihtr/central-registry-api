@@ -2,12 +2,10 @@ import fastapi
 import sqlalchemy
 
 from src.api.schemas.signed_api_data import SignedApiData
-from src.api import service
+from src.api import constants, exceptions, service
 from src.database import get_db
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-
-
 
 
 router = fastapi.APIRouter(prefix="/api", tags=["messages"])
@@ -43,16 +41,20 @@ def get_outgoing_messages(
     Возвращает список транзакций с сообщениями, адресованными Системе А, за указанный период.
 
     """
-    return JSONResponse(
-        content=service.outgoing_service(
-            envelope=envelope, 
-            db=db,
-        ),
-        status_code=200
-    )
+    try:
+        result = service.outgoing_service(envelope=envelope, db=db)
+        return JSONResponse(content=result, status_code=200)
+    except exceptions.APIException as e:
+        return JSONResponse(
+            content={"error": e.message},
+            status_code=e.status_code
+        )
+    except Exception:
+        return JSONResponse(
+            content={"error": constants.HTTP_DESCRIPTIONS[500]},
+            status_code=500
+        )
   
-
-
 
 @router.post("/incoming")
 def get_incoming_messages(
@@ -68,11 +70,24 @@ def get_incoming_messages(
     Тело ответа: конверт SignedApiData, где в поле Data находится TransactionsData с
     массивом транзакций-квитков.
     """
-    return  JSONResponse(
-        content=service.incoming_service(
-            envelope=envelope, 
-            db=db,
-        ),
-        status_code=200
+    try:
+        result = service.incoming_service(envelope=envelope, db=db)
+        return JSONResponse(content=result, status_code=200)
+    except exceptions.APIException as e:
+        return JSONResponse(
+            content={"error": e.message},
+            status_code=e.status_code
+        )
+    except Exception:
+        return JSONResponse(
+            content={"error": constants.HTTP_DESCRIPTIONS[500]},
+            status_code=500
+        )
+    
+
+@router.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"])
+async def catch_all(path: str):
+    return JSONResponse(
+        content=constants.HTTP_DESCRIPTIONS[404],
+        status_code=404
     )
-   
