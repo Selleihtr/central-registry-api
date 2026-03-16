@@ -78,13 +78,13 @@ info_message_placeholder = {
     "BankGuaranteeHash": "5D6F8E2A1C3B9F4D7E8A2C5B1D3F6E8A9C2D4F6A8B1C3E5F7A9D2B4C6E8F0A1"
 }
 
-
 search_request_place_holder = {
   "StartDate": "2024-01-01T00:00:00Z",
   "EndDate": "2024-12-31T23:59:59Z",
   "Limit": 10,
   "Offset": 0
 }
+
 
 def create_seach_request():
     signed_api_data = dict()

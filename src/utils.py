@@ -11,6 +11,8 @@ def to_pascal_case(snake_str: str) -> str:
     # Разбиваем по underscore и делаем каждое слово с заглавной
     words = snake_str.split('_')
     return ''.join(word.capitalize() for word in words)
+
+
 def parse_iso8601_utc(value: typing.Any, field_name: str, model_class: type) -> typing.Any:
     """
     Парсит ISO 8601 строку в формате "2024-01-01T00:00:00Z" в UTC datetime.

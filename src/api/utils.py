@@ -73,6 +73,7 @@ def pack_envelope(
         signer_cert=cert_base64
     )
 
+
 def decode_base64_json(data: str) -> dict:
     """
     Декодирует Base64 строку и парсит JSON.
@@ -80,6 +81,7 @@ def decode_base64_json(data: str) -> dict:
     """
     str_data = base64.b64decode(data).decode('utf-8')
     return json.loads(str_data)
+
 
 def encode_base64(data: typing.Union[str, bytes, dict, list, typing.Any]) -> str:
     """
@@ -140,6 +142,7 @@ def to_json(data: typing.Dict, sort_keys: bool = False) -> str:
         separators=(',', ':'),   # компактный формат без пробелов
         sort_keys=sort_keys      # False для сохранения порядка
     )
+
 
 def calculate_transaction_hash(transaction: typing.Any) -> str:
     """

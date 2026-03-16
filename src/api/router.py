@@ -39,15 +39,15 @@ def get_outgoing_messages(
     db: Session = fastapi.Depends(get_db),
 ):
     """
-    Получение входящих сообщений
+    Получение входящих сообщений за определенный период
 
     - **envelope**: объект типа `SignedApiData`, содержащий:
         - `Data` (str): base64-закодированные данные
         - `Sign` (str): подпись
         - `SignerCert` (str): сертификат подписанта
 
-    Возвращает список транзакций с сообщениями, адресованными Системе А, за указанный период.
-
+    Тело ответа: конверт SignedApiData, где в поле Data находится TransactionsData с
+    массивом транзакций с примененной пагинацией.
     """
     try:
         result = service.outgoing_service(envelope=envelope, db=db)
