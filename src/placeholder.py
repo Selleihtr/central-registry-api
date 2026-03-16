@@ -8,10 +8,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.api.schemas.transactions import TransactionScheme
 from src.api import utils
+from src import utils as ut
 from src.api import models
 
 transaction_placeholder = {
     "TransactionType": 9,
+    "Data":"",
     "Hash": "",
     "Sign": "",
     "SignerCert": "SYSTEM_A",
@@ -28,8 +30,8 @@ message_placeholder = {
         "MessageTime": "2024-05-20T10:00:00Z",
         "ChainGuid": "CHAIN-001",
         "PreviousTransactionHash": None,
-        "MetaData": "Первая транзакция в цепочке",
-        "Data":""
+        "MetaData": None,
+        "Data":None,
     }
 
 info_message_placeholder = {
@@ -133,14 +135,19 @@ def create_transaction_in_db(
     tx_data = TransactionScheme(**data_dict)
     message_data = data_dict["Data"]
     
+    tx_for_hash = data_dict.copy()
+    tx_for_hash["Hash"] = ""
+    tx_for_hash["Sign"] = ""
+    transaction_hash = utils.calculate_hash(tx_for_hash)
+
     db_transaction = models.Transaction(
         guid=uuid.uuid4().hex,
         transaction_type=transaction_type,
         data=message_data,
-        hash=utils.calculate_hash(data_b64),
+        hash=transaction_hash,
         sign=sign_b64,
         signer_cert=cert_b64,
-        transaction_time=tx_data.transaction_time,  # 👈 уже datetime
+        transaction_time=tx_data.transaction_time, 
         meta_data=meta_data,
         transaction_in=transaction_in,
         transaction_out=transaction_out

@@ -1,3 +1,4 @@
+import datetime
 import hashlib
 import json
 import base64
@@ -39,12 +40,8 @@ def unpack_envelope(
         "signer": signer
     }
     
-    # Проверяем подпись
     if verify_sign:
-        # expected_sign = encode_base64(
-            # calculate_hash(envelope.data)
         expected_sign = create_sign_from_hash(calculate_hash(envelope.data))
-        # )
         if envelope.sign != expected_sign:
             print(envelope.sign,expected_sign, sep='\n\n')
             raise ValueError(f"Invalid signature")
@@ -68,7 +65,6 @@ def pack_envelope(
     """
     data_base64 = encode_base64(data)
     cert_base64 = encode_base64(signer_name)
-    # sign_base64 = encode_base64(calculate_hash(data_base64))
     sign_base64 = create_sign_from_hash(calculate_hash(data_base64))
     
     return SignedApiData(
@@ -145,23 +141,80 @@ def to_json(data: typing.Dict, sort_keys: bool = False) -> str:
         sort_keys=sort_keys      # False для сохранения порядка
     )
 
+def calculate_transaction_hash(transaction: typing.Any) -> str:
+    """
+    Вычисляет хеш транзакции по алгоритму:
+    1. Удалить поля Hash и Sign (установить в пустую строку)
+    2. Сериализовать в JSON с сохранением порядка полей
+    3. Вычислить SHA-256 от UTF-8 байт
+    4. Вернуть HEX в верхнем регистре
+    
+    Args:
+        transaction: объект транзакции (Pydantic модель или dict)
+    
+    Returns:
+        HEX строка хеша в верхнем регистре
+    """
+    # Получаем dict из транзакции
+    if hasattr(transaction, "model_dump"):
+        # Это Pydantic модель
+        data_dict = transaction.model_dump(by_alias=True)
+    else:
+        # Это уже dict
+        data_dict = transaction.copy()
+    
+    # Удаляем поля подписи
+    data_dict["Hash"] = ""
+    data_dict["Sign"] = ""
+    
+    # Конвертируем datetime в строку если нужно
+    if "TransactionTime" in data_dict and isinstance(data_dict["TransactionTime"], datetime.datetime):
+        data_dict["TransactionTime"] = data_dict["TransactionTime"].strftime("%Y-%m-%dT%H:%M:%SZ")
+    
+    # Сериализуем в JSON с сохранением порядка полей
+    json_str = json.dumps(
+        data_dict,
+        ensure_ascii=False,
+        separators=(',', ':'),
+        sort_keys=False
+    )
+    
+    # Вычисляем SHA-256
+    bytes_data = json_str.encode('utf-8')
+    sha256 = hashlib.sha256(bytes_data)
+    
+    return sha256.hexdigest().upper()
+
+
+def verify_transaction_hash(transaction: typing.Any) -> bool:
+    """
+    Проверяет соответствие хеша транзакции
+    
+    Args:
+        transaction: объект транзакции
+    
+    Returns:
+        True если хеш совпадает, иначе False
+    """
+    # Получаем оригинальный хеш из транзакции
+    if hasattr(transaction, "hash"):
+        original_hash = transaction.hash.upper()
+    else:
+        original_hash = transaction.get("Hash", "").upper()
+    
+    # Вычисляем текущий хеш
+    calculated_hash = calculate_transaction_hash(transaction)
+    
+    return calculated_hash == original_hash
+
+
 def calculate_hash(obj: typing.Union[typing.Dict, str, typing.Any]) -> str:
     """
     Вычисляет SHA-256 хеш для объекта или строки
-    
-    Args:
-        obj: Объект для хеширования:
-            - dict: сериализуется в JSON и хешируется
-            - str: хешируется напрямую как UTF-8 строка
-            - другие типы: приводятся к строке
-    
-    Returns:
-        HEX-строка в верхнем регистре (64 символа)
     """
     if isinstance(obj, dict):
-        data_for_sign = obj.copy()
         json_str = json.dumps(
-            data_for_sign,
+            obj,  # используем оригинальный dict
             ensure_ascii=False,
             separators=(',', ':'),
             sort_keys=False

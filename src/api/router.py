@@ -68,7 +68,11 @@ def get_incoming_messages(
     Тело ответа: конверт SignedApiData, где в поле Data находится TransactionsData с
     массивом транзакций-квитков.
     """
-    return 
-    
-
-
+    return  JSONResponse(
+        content=service.incoming_service(
+            envelope=envelope, 
+            db=db,
+        ),
+        status_code=200
+    )
+   

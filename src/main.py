@@ -18,7 +18,7 @@ def startup():
             db=db,
             signed_api_data=signed_data,
             transaction_type=9,
-            meta_data="Тестовая транзакция при запуске"
+            meta_data=None
         )
         db.commit()
     except Exception as e:

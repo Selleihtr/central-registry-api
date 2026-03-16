@@ -63,9 +63,11 @@ class BaseScheme(pydantic.BaseModel):
         return round_decimal_fields(self)
 
     model_config = pydantic.ConfigDict(
+        use_enum_values=True,
         from_attributes=True,
         alias_generator=utils.to_pascal_case,
         populate_by_name=True,
+         # Это заставит Pydantic использовать значения Enum (int)
         # Для ответа используем формат "2024-01-01T00:00:00Z"
         json_encoders={
             datetime.datetime: utils.serialize_to_iso8601_utc
