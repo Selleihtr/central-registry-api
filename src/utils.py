@@ -11,7 +11,6 @@ def to_pascal_case(snake_str: str) -> str:
     # Разбиваем по underscore и делаем каждое слово с заглавной
     words = snake_str.split('_')
     return ''.join(word.capitalize() for word in words)
-
 def parse_iso8601_utc(value: typing.Any, field_name: str, model_class: type) -> typing.Any:
     """
     Парсит ISO 8601 строку в формате "2024-01-01T00:00:00Z" в UTC datetime.
@@ -32,27 +31,40 @@ def parse_iso8601_utc(value: typing.Any, field_name: str, model_class: type) -> 
     # Если поле должно быть datetime и пришла строка
     if field_type in (datetime.datetime, typing.Optional[datetime.datetime]) and isinstance(value, str):
         try:
-            # Проверяем, что строка соответствует ожидаемому формату
-            if not value.endswith('Z'):
-                raise ValueError(f"Expected ISO format with Z, got: {value}")
+            # Регулярка для формата YYYY-MM-DDTHH:MM:SSZ
+            import re
+            pattern = r'^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})Z$'
+            match = re.match(pattern, value)
             
-            # Убираем Z и парсим
-            dt_str = value[:-1]  # убираем Z
-            dt = datetime.datetime.fromisoformat(dt_str)
+            if not match:
+                raise ValueError(f"Invalid ISO 8601 format: {value}")
             
-            # Добавляем UTC timezone
-            dt = dt.replace(tzinfo=datetime.timezone.utc)
+            # Извлекаем компоненты даты и времени
+            year, month, day, hour, minute, second = map(int, match.groups())
+            
+            # Создаем datetime с UTC timezone
+            dt = datetime.datetime(year, month, day, hour, minute, second, tzinfo=datetime.timezone.utc)
             
             return dt
-        except ValueError as e:
+            
+        except Exception as e:
             raise ValueError(
                 f"Invalid ISO 8601 format (expected 'YYYY-MM-DDTHH:MM:SSZ'): {value}"
             ) from e
     
     return value
 
+
 def serialize_to_iso8601_utc(dt: datetime.datetime) -> str:
     """
     Сериализует datetime в формат "2024-01-01T00:00:00Z"
+    
+    Важно: функция ожидает на вход datetime с timezone!
     """
-    return dt.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # Если datetime без timezone - добавляем UTC
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
+    
+    # Форматируем в UTC, но если время уже в UTC - оно не изменится
+    dt_utc = dt.astimezone(datetime.timezone.utc)
+    return dt_utc.strftime("%Y-%m-%dT%H:%M:%SZ")
